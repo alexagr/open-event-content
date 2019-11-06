@@ -1,0 +1,6 @@
+client_secret.json
+package-lock.json
+*.zip
+*old/
+*.png
+*.jpg
