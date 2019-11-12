@@ -123,7 +123,7 @@ def main():
             room_he = row[3]
         else:
             room_he = room
-        if row[4]:
+        if len(row) > 4 and row[4]:
             color = row[4]
         else:
             color = ''
