@@ -23,7 +23,27 @@ except ImportError:
 # at ~/.credentials/sheets.googleapis.com-python-quickstart.json
 SCOPES = 'https://www.googleapis.com/auth/spreadsheets.readonly'
 CLIENT_SECRET_FILE = 'client_secret.json'
-APPLICATION_NAME = 'Limmud 2017 Web App'
+APPLICATION_NAME = 'Limmud 2019 Web App'
+
+
+def parse_name(name):
+    """
+    @param name - name in 'Last First' or 'Last.First' or 'Last First$First Last' format
+    @return ['Last First', 'First Last']
+    """
+    n = name.split('.')
+    if len(n) == 2:
+        return [name.replace('.', ' '), n[1] + ' ' + n[0]]
+
+    n = name.split('$')
+    if len(n) == 2:
+        return [n[0], n[1]]
+
+    n = name.split(' ')
+    if len(n) == 2:
+        return [name, n[1] + ' ' + n[0]]
+
+    return [name, name]
 
 
 def get_credentials():
@@ -56,7 +76,7 @@ def get_credentials():
 
 def main():
     # some global variables
-    event = 'limmud2018'
+    event = 'limmud2019'
 
     tracks = {}
     tracks_id = 0
@@ -97,7 +117,7 @@ def main():
     service = discovery.build('sheets', 'v4', http=http,
                               discoveryServiceUrl=discoveryUrl)
 
-    spreadsheetId = '1ArQhrtDAmtcwyDTlRhXqlJT3SrgirWLSy2yxfqtf0CU'
+    spreadsheetId = '1zHDlydoFTHNiMlUE_EUVHGVGVhoEFIIAryVrRldEQ2I'
 
     # parse the locations
     print('Reading locations...')
@@ -226,8 +246,10 @@ def main():
                 continue
 
             person_id = len(presentors)
-            speakers.append({'id' : person_id, 'name' : person, 'name_he' : person_he, 'sessions' : [], 'photo' : '/images/speakers/' + photo, 'short_biography' : descr, 'short_biography_he' : descr_he, 'long_biography' : biography, 'long_biography_he' : biography_he})
-            presentors.append(person)
+            person_name = parse_name(person)
+            person_name_he = parse_name(person_he)
+            speakers.append({'id' : person_id, 'name' : person_name[0], 'name2' : person_name[1], 'name_he' : person_name_he[0], 'name2_he' : person_name_he[1], 'sessions' : [], 'photo' : '/images/speakers/' + photo, 'short_biography' : descr, 'short_biography_he' : descr_he, 'long_biography' : biography, 'long_biography_he' : biography_he})
+            presentors.append(person_name[0])
 
         except IndexError as e:
             continue
@@ -341,11 +363,12 @@ def main():
 
             # update speakers
             for i in range(len(people)):
-                person = people[i].strip()
-                if not person in presentors:
+                person_name = parse_name(people[i].strip())
+                if not person_name[0] in presentors:
+                    person_name_he = parse_name(people_he[i].strip())
                     person_id = len(presentors)
-                    speakers.append({'id' : person_id, 'name' : person, 'name_he' : people_he[i].strip(), 'sessions' : [], 'photo' : '/images/speakers/avatar.png', 'short_biography' : '', 'short_biography_he' : '', 'long_biography' : '', 'long_biography_he' : ''})
-                    presentors.append(person)
+                    speakers.append({'id' : person_id, 'name' : person_name[0], 'name2' : person_name[1], 'name_he' : person_name_he[0], 'name2_he' : person_name_he[1], 'sessions' : [], 'photo' : '/images/speakers/avatar.png', 'short_biography' : '', 'short_biography_he' : '', 'long_biography' : '', 'long_biography_he' : ''})
+                    presentors.append(person_name[0])
 
             # update end_time if session overlaps to the next day
             offset = '+02:00'
@@ -386,16 +409,16 @@ def main():
             session['track']['name'] = category
             session['track']['name_he'] = category_he
             for i in range(len(people)):
-                person = people[i].strip()
-                person_he = people_he[i].strip()
-                session['speakers'].append({'id' : presentors.index(person), 'name' : person, 'name_he' : person_he})
-            sessions.append(session)
+                person_name = parse_name(people[i].strip())
+                person_name_he = parse_name(people_he[i].strip())
+                session['speakers'].append({'id' : presentors.index(person_name[0]), 'name' : person_name[0], 'name_he' : person_name_he[0]})
+            sessions.append(session)                                                                         
 
             # update speaker sessions
             for person in people:
-                person = person.strip()
+                person_name = parse_name(person.strip())
                 for speaker in speakers:
-                    if speaker['name'] == person:
+                    if speaker['name'] == person_name[0]:
                         speaker['sessions'].append({'id' : session_id, 'title' : name, 'title_he' : name_he})
 
             # update track sessions
